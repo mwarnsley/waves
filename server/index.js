@@ -114,6 +114,19 @@ app.post('/api/users/login', (req, res) => {
     });
 });
 
+// Route for logging the user out
+app.get('/api/user/logout', authentication, (req, res) => {
+    const { user } = req;
+
+    User.findOneAndUpdate({ _id: user._id }, { token: '' }, (err, doc) => {
+        // If there is an error loggint he user out we will send back the error
+        if (err) return res.json({ success: false, err });
+
+        // If no error we are returning the status of 200 and success to true
+        return res.status(200).send({ success: true });
+    });
+});
+
 // If we are in production mode then we will serve the index.html file that is made from the build directory
 if (process.env.NODE_ENV === 'production') {
     app.get('*', (req, res) => {
