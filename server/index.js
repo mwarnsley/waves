@@ -8,6 +8,9 @@ require('dotenv').config({ path: '../.env' });
 // Grabbing the models to use from mongoose
 const User = require('./models/User');
 
+// Middelware
+const authentication = require('./middleware/authentication');
+
 // Initializing the express app
 const app = express();
 
@@ -34,6 +37,23 @@ if (process.env.NODE_ENV === 'production') {
  * Request for the users
  */
 
+// Checking the authentication for the user
+app.get('/api/users/auth', authentication, (req, res) => {
+    const { user } = req;
+
+    // If we have authenticated the user to make the request then we will send the status and json
+    res.status(200).json({
+        isAdmin: user.role === 0 ? false : true,
+        isAuth: true,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        cart: user.cart,
+        history: user.history
+    });
+});
+
 // Route to register the user to the database
 app.post('/api/users/register', (req, res) => {
     // Storing the new user from the req.body;
@@ -45,7 +65,7 @@ app.post('/api/users/register', (req, res) => {
         if (err) return res.json({ success: false, err });
 
         // If no error then we are sending back the registered user
-        res.status(200).json({ success: true, userData: doc });
+        res.status(200).json({ success: true });
     });
 });
 

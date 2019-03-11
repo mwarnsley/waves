@@ -94,5 +94,30 @@ UserSchema.methods.generateToken = function(callback) {
     });
 };
 
+/**
+ * Need to add a method to find the user by their token if there is one
+ * We use statics because it is a custom defined method by us
+ */
+UserSchema.statics.findByToken = function(token, callback) {
+    const user = this;
+
+    /**
+     * Verifying that the token is correct
+     * @param { token } string version of the token being passed in
+     * @param { SECRET } string version of our secret that is not present to anyone else
+     * Callback function gives an error or the decoded token
+     */
+    jwt.verify(token, process.env.SECRET, function(err, decode) {
+        // Finding the user by the decoded id and the token
+        user.findOne({ _id: decode, token: token }, function(err, user) {
+            // If there is no error then we need to return the rror
+            if (err) return callback(err);
+
+            // If there is a user, we will return the user that was found
+            callback(null, user);
+        });
+    });
+};
+
 // Exporting the Users Sceham as a mongoose model
 module.exports = mongoose.model('User', UserSchema);
