@@ -67,14 +67,22 @@ class Login extends React.Component<{}, ILoginState> {
                             this.updateForm(element)
                         }
                     />
+                    <FormField
+                        formData={formData.password}
+                        id="password"
+                        // tslint:disable-next-line
+                        onChange={(element: IElement) =>
+                            this.updateForm(element)
+                        }
+                    />
                 </form>
             </div>
         );
     }
     private submitForm = (event: object) => {
-        // React.FormEvent<HTMLInputElement>
+        console.log('We are submitting: ');
     };
-    private updateForm = (element: IElement) => () => {
+    private updateForm = (element: IElement) => {
         const { formData } = this.state;
         const newFormData = update(element, formData, 'login');
         this.setState({
