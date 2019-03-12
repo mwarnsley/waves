@@ -7,9 +7,13 @@ require('dotenv').config({ path: '../.env' });
 
 // Grabbing the models to use from mongoose
 const User = require('./models/User');
+const Brand = require('./models/Brand');
+const Wood = require('./models/Wood');
+const Guitar = require('./models/Guitar');
 
 // Middelware
 const authentication = require('./middleware/authentication');
+const admin = require('./middleware/admin');
 
 // Initializing the express app
 const app = express();
@@ -33,9 +37,131 @@ if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, 'build')));
 }
 
-/**
- * Request for the users
- */
+/***********************************
+        Request for the guitars
+        
+ ***********************************/
+
+// Route to post a new guitar
+app.post('/api/product/guitar', authentication, admin, (req, res) => {
+    const guitar = new Guitar(req.body);
+
+    guitar.save((err, doc) => {
+        // If there is an error we are sending back the error
+        if (err) return res.json({ success: false, err });
+
+        // If there is no error we send a status of 200 and the document
+        res.status(200).json({ success: true, guitar: doc });
+    });
+});
+
+// Route for getting all of the guitars
+app.get('/api/product/guitars', (req, res) => {
+    // Finding all of the guitars in the database
+    Guitar.find({}, (err, guitars) => {
+        // If there is an error we are sending back the error
+        if (err) return res.json({ success: false, err });
+
+        // If there is no error we send back all the guitars
+        res.status(200).send(guitars);
+    });
+});
+
+// Route for getting the guitars by one id or multiple ids
+app.get('/api/product/guitar_by_id', (req, res) => {
+    const type = req.query.type;
+    let items = req.query.id;
+
+    // If the type is an array of ids then we need to do some logic to get the ids
+    if (type === 'array') {
+        const ids = req.query.id.split(',');
+        items = [];
+        // Mapping through the items and setting it as an array of the ids from the database
+        items = ids.map(item => {
+            return mongoose.Types.ObjectId(item);
+        });
+    }
+
+    /**
+     * We either pass a single value or an array and find it using the $in notation for mongo and finding by _id
+     * We are also populating the brand and wood from the ObjectId in the database
+     */
+    Guitar.find({ _id: { $in: items } })
+        .populate('brand')
+        .populate('wood')
+        .exec((err, docs) => {
+            // If there is an error we are sending back the error
+            if (err) return res.json({ success: false, err });
+
+            // If there is no error then we send a status of 200 and the docs of the guitars
+            return res.status(200).send(docs);
+        });
+});
+
+/***********************************
+        Request for the woods
+        
+ ***********************************/
+
+// Route for saving the wood
+app.post('/api/product/wood', authentication, admin, (req, res) => {
+    const wood = new Wood(req.body);
+
+    wood.save((err, doc) => {
+        // If there is an error we are sending back the error
+        if (err) return res.json({ success: false, err });
+
+        // If there is no error we send a status of 200 and the document
+        res.status(200).json({ success: true, wood: doc });
+    });
+});
+
+// Route for getting all of the woods
+app.get('/api/product/woods', (req, res) => {
+    // Finding all of the woods in the database
+    Wood.find({}, (err, woods) => {
+        // If there is an error we are sending back the error
+        if (err) return res.json({ success: false, err });
+
+        // If there is no error we send back all the woods
+        res.status(200).send(woods);
+    });
+});
+
+/***********************************
+        Request for the brands
+        
+ ***********************************/
+
+// Route for saving the new brand
+app.post('/api/product/brand', authentication, admin, (req, res) => {
+    const brand = new Brand(req.body);
+
+    brand.save((err, doc) => {
+        // If there is an error we are sending back the error
+        if (err) return res.json({ success: false, err });
+
+        // If there is no error we send back a status code of 200 and success true with the brand
+        res.status(200).json({ success: true, brand: doc });
+    });
+});
+
+// Route to get the brands
+app.get('/api/product/brands', (req, res) => {
+    // Fetching all of the brands
+    Brand.find({}, (err, brands) => {
+        // If there is an error we are sending back the error
+        if (err) return res.status(400).json({ success: false, err });
+
+        // If there is no error we send a status of 200 and send back all the brands
+        res.status(200).send(brands);
+    });
+});
+
+/***********************************
+        Request for the users
+
+ ***********************************/
 
 // Checking the authentication for the user
 app.get('/api/users/auth', authentication, (req, res) => {
